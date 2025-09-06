@@ -1,0 +1,84 @@
+name: 'Reusable Bicep Deployment'
+
+on:
+  workflow_call:
+    inputs:
+      stackName:
+        required: true
+        type: string
+      templateFile:
+        required: true
+        type: string
+      parametersFile:
+        required: true
+        type: string
+      deploymentScope:
+        required: true
+        type: string
+      resourceGroupName:
+        required: false
+        type: string
+      location:
+        required: false
+        type: string
+      parameters:
+        required: false
+        type: string
+    outputs:
+      stackOutputs:
+        description: 'The outputs of the deployment stack.'
+        value: ${{ jobs.deploy.outputs.stackOutputs }}
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: 'Deploy Bicep Stack'
+    runs-on: ubuntu-latest
+    outputs:
+      stackOutputs: ${{ steps.set_outputs.outputs.stackOutputs }}
+
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v4
+
+      - name: 'Azure Login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: 'Build Deployment Command'
+        id: build_command
+        run: |
+          CMD="az deployment stack create --name ${{ inputs.stackName }} --template-file ${{ inputs.templateFile }} --parameters ${{ inputs.parametersFile }} --yes"
+          if [ "${{ inputs.deploymentScope }}" == "subscription" ]; then
+            CMD="$CMD --scope subscription --location ${{ inputs.location }}"
+          else
+            CMD="$CMD --resource-group ${{ inputs.resourceGroupName }}"
+          fi
+          if [ -n "${{ inputs.parameters }}" ]; then
+            CMD="$CMD --parameters ${{ inputs.parameters }}"
+          fi
+          echo "command=$CMD" >> $GITHUB_OUTPUT
+
+      - name: 'Deploy Bicep Stack'
+        id: deploy
+        run: ${{ steps.build_command.outputs.command }}
+
+      - name: 'Get Stack Outputs'
+        id: get_outputs
+        run: |
+          if [ "${{ inputs.deploymentScope }}" == "subscription" ]; then
+            echo "outputs=$(az deployment stack show --name ${{ inputs.stackName }} --scope subscription --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
+          else
+            echo "outputs=$(az deployment stack show --name ${{ inputs.stackName }} --resource-group ${{ inputs.resourceGroupName }} --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Set Job Outputs'
+        id: set_outputs
+        run: |
+          echo "stackOutputs=${{ steps.get_outputs.outputs.outputs }}" >> $GITHUB_OUTPUT

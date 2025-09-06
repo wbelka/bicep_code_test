@@ -1,0 +1,54 @@
+name: 'Deploy Azure Infrastructure'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-resources:
+    name: 'Deploy Resources Stack'
+    uses: ./.github/workflows/reusable-deploy-bicep.yml
+    with:
+      stackName: 'resources-stack'
+      templateFile: './infra/resources/main-dev-resources.bicep'
+      parametersFile: './infra/resources/parameters-dev-resources.json'
+      deploymentScope: 'subscription'
+      location: 'westeurope' # Location for stack metadata
+    secrets: inherit
+
+  deploy-network:
+    name: 'Deploy Network Stack'
+    needs: deploy-resources
+    uses: ./.github/workflows/reusable-deploy-bicep.yml
+    with:
+      stackName: 'network-stack'
+      templateFile: './infra/network/main-dev-network.bicep'
+      parametersFile: './infra/network/parameters-dev-network.json'
+      deploymentScope: 'resourceGroup'
+      resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
+      parameters: 'adminSourceAddressPrefix=${{ secrets.ADMIN_SOURCE_ADDRESS_PREFIX }}' # User needs to create this secret
+    secrets: inherit
+
+  deploy-app:
+    name: 'Deploy Application Stack'
+    needs: [deploy-resources, deploy-network]
+    uses: ./.github/workflows/reusable-deploy-bicep.yml
+    with:
+      stackName: 'app-stack'
+      templateFile: './infra/app/main-dev-app.bicep'
+      parametersFile: './infra/app/parameters-dev-app.json'
+      deploymentScope: 'resourceGroup'
+      resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
+      parameters: >-
+        privateVnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).privateVnetId.value }}
+        dbSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).dbSubnetId.value }}
+        clusterSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).aksSubnetId.value }}
+        appGwSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).appGwSubnetId.value }}
+        jumpServerSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).jumpServerSubnetId.value }}
+        keyVaultAdminObjectId=${{ secrets.AZURE_CLIENT_ID_OBJECT_ID }}
+        postgresAdminLogin=${{ secrets.POSTGRES_ADMIN_LOGIN }}
+        postgresAdminPassword=${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+        sslCertSecretValue=${{ secrets.SSL_CERT_SECRET_VALUE }}
+        argocdRepoUrl=${{ secrets.ARGOCD_REPO_URL }}
+        argocdGitSshKey=${{ secrets.ARGOCD_GIT_SSH_KEY }}
+        jumpVmSshPublicKey=${{ secrets.JUMP_VM_SSH_PUBLIC_KEY }}
+    secrets: inherit

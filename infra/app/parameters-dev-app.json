@@ -1,0 +1,60 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "prefix": {
+      "value": "mycorp"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "tags": {
+      "value": {
+        "environment": "dev",
+        "project": "mycorp"
+      }
+    },
+    "privateVnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev"
+    },
+    "dbSubnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/DbSubnet"
+    },
+    "clusterSubnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/AksSubnet"
+    },
+    "appGwSubnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/AppGwSubnet"
+    },
+    "jumpServerSubnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-public-dev/subnets/JumpServerSubnet"
+    },
+    "keyVaultAdminObjectId": {
+      "value": "YOUR_SERVICE_PRINCIPAL_OBJECT_ID"
+    },
+    "postgresAdminLogin": {
+      "value": "psqladmin"
+    },
+    "postgresAdminPassword": {
+      "value": "YOUR_POSTGRES_PASSWORD"
+    },
+    "sslCertSecretValue": {
+      "value": "YOUR_SSL_CERT_SECRET_VALUE"
+    },
+    "argocdRepoUrl": {
+      "value": "git@github.com:your-user/your-repo.git"
+    },
+    "argocdGitSshKey": {
+      "value": "YOUR_ARGOCD_GIT_SSH_KEY"
+    },
+    "deployJumpVm": {
+      "value": true
+    },
+    "jumpVmSshPublicKey": {
+      "value": "YOUR_JUMP_VM_SSH_PUBLIC_KEY"
+    }
+  }
+}
