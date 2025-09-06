@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "prefix": {
+      "value": "mycorp"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "tags": {
+      "value": {
+        "environment": "dev",
+        "project": "mycorp"
+      }
+    },
+    "hubVnetId": {
+      "value": ""
+    },
+    "hubVnetName": {
+      "value": ""
+    },
+    "firewallPrivateIp": {
+      "value": ""
+    },
+    "hubResourceGroupName": {
+      "value": ""
+    },
+    "spokeVnetAddressPrefixes": {
+      "value": [
+        "10.20.0.0/22"
+      ]
+    },
+    "spokeSubnets": {
+      "value": [
+        {
+          "name": "AksSubnet",
+          "addressPrefix": "10.20.0.0/24",
+          "nsgRules": []
+        },
+        {
+          "name": "AppGwSubnet",
+          "addressPrefix": "10.20.1.0/24",
+          "nsgRules": [
+            {
+              "name": "Allow_AppGw_Mgmt",
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "GatewayManager",
+              "destinationPortRange": "65200-65535"
+            },
+            {
+              "name": "Allow_Web",
+              "priority": 200,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "Internet",
+              "destinationPortRange": [
+                "80",
+                "443"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "DbSubnet",
+          "addressPrefix": "10.20.2.0/24",
+          "privateEndpointNetworkPoliciesEnabled": false,
+          "delegations": [
+            {
+              "name": "postgresql-delegation",
+              "properties": {
+                "serviceName": "Microsoft.DBforPostgreSQL/flexibleServers"
+              }
+            }
+          ],
+          "nsgRules": [
+            {
+              "name": "Allow_Postgres",
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "10.20.0.0/24",
+              "destinationPortRange": "5432"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
