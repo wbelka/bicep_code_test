@@ -15,22 +15,41 @@ jobs:
       location: 'westeurope' # Location for stack metadata
     secrets: inherit
 
-  deploy-network:
-    name: 'Deploy Network Stack'
+  deploy-hub-network:
+    name: 'Deploy Hub Network Stack'
     needs: deploy-resources
     uses: ./.github/workflows/reusable-deploy-bicep.yml
+    id: hub-network # Add an ID to reference outputs
     with:
-      stackName: 'network-stack'
-      templateFile: './infra/network/main-dev-network.bicep'
-      parametersFile: './infra/network/parameters-dev-network.json'
+      stackName: 'hub-network-stack'
+      templateFile: './infra/network/main-hub.bicep'
+      parametersFile: './infra/network/parameters-hub.json'
       deploymentScope: 'resourceGroup'
       resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
-      parameters: 'adminSourceAddressPrefix=${{ secrets.ADMIN_SOURCE_ADDRESS_PREFIX }}' # User needs to create this secret
+      parameters: 'adminSourceAddressPrefix=${{ secrets.ADMIN_SOURCE_ADDRESS_PREFIX }}'
+    secrets: inherit
+
+  deploy-spoke-network:
+    name: 'Deploy Spoke Network Stack'
+    needs: [deploy-resources, deploy-hub-network]
+    uses: ./.github/workflows/reusable-deploy-bicep.yml
+    id: spoke-network # Add an ID to reference outputs
+    with:
+      stackName: 'spoke-network-stack'
+      templateFile: './infra/network/main-spoke.bicep'
+      parametersFile: './infra/network/parameters-spoke.json'
+      deploymentScope: 'resourceGroup'
+      resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
+      parameters: >-
+        hubVnetId=${{ fromJson(needs.deploy-hub-network.outputs.stackOutputs).hubVnetId.value }}
+        hubVnetName=${{ fromJson(needs.deploy-hub-network.outputs.stackOutputs).hubVnetName.value }}
+        firewallPrivateIp=${{ fromJson(needs.deploy-hub-network.outputs.stackOutputs).firewallPrivateIp.value }}
+        hubResourceGroupName=${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
     secrets: inherit
 
   deploy-app:
     name: 'Deploy Application Stack'
-    needs: [deploy-resources, deploy-network]
+    needs: [deploy-resources, deploy-hub-network, deploy-spoke-network]
     uses: ./.github/workflows/reusable-deploy-bicep.yml
     with:
       stackName: 'app-stack'
@@ -39,11 +58,11 @@ jobs:
       deploymentScope: 'resourceGroup'
       resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
       parameters: >-
-        privateVnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).privateVnetId.value }}
-        dbSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).dbSubnetId.value }}
-        clusterSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).aksSubnetId.value }}
-        appGwSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).appGwSubnetId.value }}
-        jumpServerSubnetId=${{ fromJson(needs.deploy-network.outputs.stackOutputs).jumpServerSubnetId.value }}
+        privateVnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).spokeVnetId.value }}
+        dbSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).dbSubnetId.value }}
+        clusterSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).aksSubnetId.value }}
+        appGwSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).appGwSubnetId.value }}
+        jumpServerSubnetId=${{ fromJson(needs.deploy-hub-network.outputs.stackOutputs).jumpServerSubnetId.value }}
         keyVaultAdminObjectId=${{ secrets.AZURE_CLIENT_ID_OBJECT_ID }}
         postgresAdminLogin=${{ secrets.POSTGRES_ADMIN_LOGIN }}
         postgresAdminPassword=${{ secrets.POSTGRES_ADMIN_PASSWORD }}

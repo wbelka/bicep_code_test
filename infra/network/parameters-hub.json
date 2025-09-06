@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "westeurope"
+    },
+    "prefix": {
+      "value": "mycorp"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "tags": {
+      "value": {
+        "environment": "dev",
+        "project": "mycorp"
+      }
+    },
+    "adminSourceAddressPrefix": {
+      "value": "0.0.0.0/0"
+    },
+    "deployFirewall": {
+      "value": false
+    },
+    "hubVnetAddressPrefixes": {
+      "value": [
+        "10.30.0.0/22"
+      ]
+    },
+    "hubSubnets": {
+      "value": [
+        {
+          "name": "JumpServerSubnet",
+          "addressPrefix": "10.30.0.0/27",
+          "nsgRules": [
+            {
+              "name": "Allow_Admin_SSH",
+              "priority": 100,
+              "direction": "Inbound",
+              "access": "Allow",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "sourceAddressPrefix": "ADMIN_SOURCE_IP",
+              "destinationPortRange": "22"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
