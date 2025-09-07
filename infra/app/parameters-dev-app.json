@@ -17,20 +17,23 @@
         "project": "mycorp"
       }
     },
-    "privateVnetId": {
-      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev"
+    "hubVnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-hub-dev"
+    },
+    "spokeVnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-spoke-dev"
     },
     "dbSubnetId": {
-      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/DbSubnet"
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-spoke-dev/subnets/DbSubnet"
     },
     "clusterSubnetId": {
-      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/AksSubnet"
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-spoke-dev/subnets/AksSubnet"
     },
     "appGwSubnetId": {
-      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-private-dev/subnets/AppGwSubnet"
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-spoke-dev/subnets/AppGwSubnet"
     },
     "jumpServerSubnetId": {
-      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-public-dev/subnets/JumpServerSubnet"
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-hub-dev/subnets/JumpServerSubnet"
     },
     "keyVaultAdminObjectId": {
       "value": "YOUR_SERVICE_PRINCIPAL_OBJECT_ID"

@@ -58,7 +58,8 @@ jobs:
       deploymentScope: 'resourceGroup'
       resourceGroupName: ${{ fromJson(needs.deploy-resources.outputs.stackOutputs).resourceGroupName.value }}
       parameters: >-
-        privateVnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).spokeVnetId.value }}
+        hubVnetId=${{ fromJson(needs.deploy-hub-network.outputs.stackOutputs).hubVnetId.value }}
+        spokeVnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).spokeVnetId.value }}
         dbSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).dbSubnetId.value }}
         clusterSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).aksSubnetId.value }}
         appGwSubnetId=${{ fromJson(needs.deploy-spoke-network.outputs.stackOutputs).appGwSubnetId.value }}

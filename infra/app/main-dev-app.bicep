@@ -11,8 +11,11 @@ param environment string = 'dev'
 param tags object = {}
 
 // --- Network Inputs ---
-@description('The resource ID of the private VNet.')
-param privateVnetId string
+@description('The resource ID of the Hub VNet.')
+param hubVnetId string
+
+@description('The resource ID of the Spoke VNet.')
+param spokeVnetId string
 
 @description('The resource ID of the database subnet.')
 param dbSubnetId string
@@ -83,7 +86,7 @@ module postgres '../../modules/postgres/main.bicep' = {
     location: location
     administratorLogin: postgresAdminLogin
     administratorLoginPassword: postgresAdminPassword
-    vnetId: privateVnetId
+    vnetId: spokeVnetId
     delegatedSubnetId: dbSubnetId
     tags: tags
   }
@@ -94,7 +97,7 @@ module cosmosdb '../../modules/cosmosdb/main.bicep' = {
   params: {
     cosmosAccountName: cosmosAccountName
     location: location
-    vnetId: privateVnetId
+    vnetId: spokeVnetId
     subnetId: dbSubnetId
     tags: tags
   }
@@ -126,13 +129,6 @@ module argoInstaller '../../modules/containerinstance/main.bicep' = {
   }
 }
 
-// --- Outputs ---
-output keyVaultId string = keyvault.outputs.id
-output keyVaultName string = keyvault.outputs.name
-output postgresServerId string = postgres.outputs.id
-output postgresServerFqdn string = postgres.outputs.fqdn
-output cosmosAccountId string = cosmosdb.outputs.id
-output cosmosAccountEndpoint string = cosmosdb.outputs.endpoint
 module jumpvm '../../modules/jumpvm/main.bicep' = if (deployJumpVm) {
   name: 'jumpVmDeployment'
   params: {
@@ -144,6 +140,13 @@ module jumpvm '../../modules/jumpvm/main.bicep' = if (deployJumpVm) {
   }
 }
 
+// --- Outputs ---
+output keyVaultId string = keyvault.outputs.id
+output keyVaultName string = keyvault.outputs.name
+output postgresServerId string = postgres.outputs.id
+output postgresServerFqdn string = postgres.outputs.fqdn
+output cosmosAccountId string = cosmosdb.outputs.id
+output cosmosAccountEndpoint string = cosmosdb.outputs.endpoint
 output aksClusterId string = aks.outputs.id
 output aksClusterName string = aks.outputs.name
 output aksClusterPrincipalId string = aks.outputs.principalId
