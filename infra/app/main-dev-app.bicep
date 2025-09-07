@@ -40,7 +40,7 @@ param postgresAdminLogin string
 @secure()
 param postgresAdminPassword string
 
-@description('The value for the SSL certificate to be stored in Key Vault.')
+@description('The Base64-encoded PFX value for the SSL certificate to be stored in Key Vault.')
 @secure()
 param sslCertSecretValue string
 
