@@ -1,9 +1,18 @@
-name: 'Reusable Bicep Deployment'
+# Файл: .github/workflows/reusable-deploy-bicep.yml
+# Находится в центральном фреймворк-репозитории
+
+name: 'Reusable Bicep Deployment Engine'
 
 on:
   workflow_call:
     inputs:
-      stackName:
+      deploymentPrefix:
+        required: true
+        type: string
+      environmentId:
+        required: true
+        type: string
+      stackLayer:
         required: true
         type: string
       templateFile:
@@ -13,6 +22,9 @@ on:
         required: true
         type: string
       deploymentScope:
+        required: true
+        type: string
+      frameworkRepo:
         required: true
         type: string
       resourceGroupName:
@@ -40,10 +52,25 @@ jobs:
     outputs:
       stackOutputs: ${{ steps.set_outputs.outputs.stackOutputs }}
 
-    steps:
-      - name: 'Checkout'
-        uses: actions/checkout@v4
+    # Динамически собираем уникальное имя стека из переданных идентификаторов
+    env:
+      STACK_NAME: '${{ inputs.deploymentPrefix }}-${{ inputs.environmentId }}-${{ inputs.stackLayer }}-stack'
 
+    steps:
+      # 1. Получаем код из репозитория, который ВЫЗВАЛ этот workflow (репозиторий с конфигурациями)
+      - name: 'Checkout configuration repository'
+        uses: actions/checkout@v4
+        with:
+          path: 'config'
+
+      # 2. Получаем код из центрального фреймворк-репозитория (путь к нему передан как параметр)
+      - name: 'Checkout bicep framework repository'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.frameworkRepo }}
+          path: 'framework'
+
+      # 3. Логинимся в Azure
       - name: 'Azure Login'
         uses: azure/login@v1
         with:
@@ -51,31 +78,40 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      # 4. Собираем команду AZ CLI, используя пути к двум разным checkout-папкам
       - name: 'Build Deployment Command'
         id: build_command
         run: |
-          CMD="az deployment stack create --name ${{ inputs.stackName }} --template-file ${{ inputs.templateFile }} --parameters ${{ inputs.parametersFile }} --yes"
+          TEMPLATE_PATH="framework/${{ inputs.templateFile }}"
+          PARAMS_PATH="config/${{ inputs.parametersFile }}"
+
+          CMD="az deployment stack create --name ${{ env.STACK_NAME }} --template-file $TEMPLATE_PATH --parameters $PARAMS_PATH --yes"
+
           if [ "${{ inputs.deploymentScope }}" == "subscription" ]; then
             CMD="$CMD --scope subscription --location ${{ inputs.location }}"
           else
             CMD="$CMD --resource-group ${{ inputs.resourceGroupName }}"
           fi
+
           if [ -n "${{ inputs.parameters }}" ]; then
             CMD="$CMD --parameters ${{ inputs.parameters }}"
           fi
+
           echo "command=$CMD" >> $GITHUB_OUTPUT
 
+      # 5. Выполняем развертывание
       - name: 'Deploy Bicep Stack'
         id: deploy
         run: ${{ steps.build_command.outputs.command }}
 
+      # 6. Получаем и возвращаем выходные данные (outputs)
       - name: 'Get Stack Outputs'
         id: get_outputs
         run: |
           if [ "${{ inputs.deploymentScope }}" == "subscription" ]; then
-            echo "outputs=$(az deployment stack show --name ${{ inputs.stackName }} --scope subscription --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
+            echo "outputs=$(az deployment stack show --name ${{ env.STACK_NAME }} --scope subscription --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
           else
-            echo "outputs=$(az deployment stack show --name ${{ inputs.stackName }} --resource-group ${{ inputs.resourceGroupName }} --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
+            echo "outputs=$(az deployment stack show --name ${{ env.STACK_NAME }} --resource-group ${{ inputs.resourceGroupName }} --query "properties.outputs" -o json)" >> $GITHUB_OUTPUT
           fi
 
       - name: 'Set Job Outputs'
