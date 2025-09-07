@@ -17,7 +17,10 @@
         "project": "mycorp"
       }
     },
-    "privateVnetId": {
+    "hubVnetId": {
+      "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-hub-dev"
+    },
+    "spokeVnetId": {
       "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/mycorp-rg-dev/providers/Microsoft.Network/virtualNetworks/mycorp-vnet-spoke-dev"
     },
     "dbSubnetId": {
