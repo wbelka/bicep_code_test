@@ -90,7 +90,7 @@ resource spokeToHubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeer
     allowVirtualNetworkAccess: true
     allowForwardedTraffic: true
     allowGatewayTransit: false
-    useRemoteGateways: true // Allows spoke to use gateway in hub
+    useRemoteGateways: false // Allows spoke to use gateway in hub
     remoteVirtualNetwork: {
       id: hubVnetId
     }

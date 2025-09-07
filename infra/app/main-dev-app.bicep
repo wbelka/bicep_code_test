@@ -126,13 +126,6 @@ module argoInstaller '../../modules/containerinstance/main.bicep' = {
   }
 }
 
-// --- Outputs ---
-output keyVaultId string = keyvault.outputs.id
-output keyVaultName string = keyvault.outputs.name
-output postgresServerId string = postgres.outputs.id
-output postgresServerFqdn string = postgres.outputs.fqdn
-output cosmosAccountId string = cosmosdb.outputs.id
-output cosmosAccountEndpoint string = cosmosdb.outputs.endpoint
 module jumpvm '../../modules/jumpvm/main.bicep' = if (deployJumpVm) {
   name: 'jumpVmDeployment'
   params: {
@@ -144,6 +137,13 @@ module jumpvm '../../modules/jumpvm/main.bicep' = if (deployJumpVm) {
   }
 }
 
+// --- Outputs ---
+output keyVaultId string = keyvault.outputs.id
+output keyVaultName string = keyvault.outputs.name
+output postgresServerId string = postgres.outputs.id
+output postgresServerFqdn string = postgres.outputs.fqdn
+output cosmosAccountId string = cosmosdb.outputs.id
+output cosmosAccountEndpoint string = cosmosdb.outputs.endpoint
 output aksClusterId string = aks.outputs.id
 output aksClusterName string = aks.outputs.name
 output aksClusterPrincipalId string = aks.outputs.principalId
